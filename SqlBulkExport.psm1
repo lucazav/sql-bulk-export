@@ -164,7 +164,7 @@ function Export-SqlBulkCsv {
     elseif ($PSBoundParameters.ContainsKey('Query')) {
 
         $SqlQuery = $Query;
-        $titleStr = " Extracting data from query:\r\n $($Query)"
+        $titleStr = " Extracting data from query."
 
     }
     else {
@@ -180,6 +180,7 @@ function Export-SqlBulkCsv {
     Write-Host ""
     Write-Host $separator
     Write-Host $titleStr
+    Write-Host " Query: $SqlQuery"
     Write-Host $separator
     
 
@@ -433,10 +434,10 @@ function Export-SqlBulkCsv {
     .EXAMPLE
     Import-Module -Name "C:\your-folder\SqlBulkExport.psm1"
 
-    Export-MonthlySqlBulkCsv -ServerName "YourServerName" -DatabaseName "YourDatabaseName" -SchemaName "yourschema" -TableViewName "your_table_name" -DateColumnName "date_column" -StartPeriod "2022-01" -EndPeriod "2022-04" -OutputFileFullPath "C:\your-output-folder\output_{}.csv"
+    Export-SqlBulkCsvByPeriod -ServerName "YourServerName" -DatabaseName "YourDatabaseName" -SchemaName "yourschema" -TableViewName "your_table_name" -DateColumnName "date_column" -StartPeriod "2022-01" -EndPeriod "2022-04" -OutputFileFullPath "C:\your-output-folder\output_{}.csv"
 
 #>
-function Export-MonthlySqlBulkCsv {
+function Export-SqlBulkCsvByPeriod {
 
     param(
         
@@ -497,7 +498,8 @@ function Export-MonthlySqlBulkCsv {
         
         $StartPeriodParsed=[Datetime]::ParseExact($StartPeriod, "yyyy", $null)
         $EndPeriodParsed=[Datetime]::ParseExact($EndPeriod, "yyyy", $null)
-        $DateToken = "YEARLY"
+        $DateToken = "yyyy"
+        $PeriodDescr = "YEARLY"
 
     }
     else # [start and end time period types are different]
@@ -520,14 +522,30 @@ function Export-MonthlySqlBulkCsv {
         $start = $StartPeriodParsed
 
         while($start -le $EndPeriodParsed) {
-        
-            Write-Host ""
-            Write-Host ""
 
             $startDateStr = $start.ToString("yyyy-MM-dd")
             $endDateStr = $start.AddMonths(1).ToString("yyyy-MM-dd")
 
-            Export-SqlBulkCsv -ServerName "$ExportServerName" -DatabaseName "$ExportDbName" -Query "SELECT * FROM [$ExportSchemaName].[$ExportTableName] WHERE [$DateColumnName] >= '$startDateStr' AND [$DateColumnName] < '$endDateStr'" -OutputFileFullPath "$($OutputFileFullPath.Replace('{}', $start.ToString($DateToken)))" -SeparatorChar "-"
+            if ($PSBoundParameters.ContainsKey("User")) {
+
+                if ($PSBoundParameters.ContainsKey("Password")) {
+        
+                    $pass = $Password
+
+                } else {
+        
+                    $pass = ""
+        
+                }
+                
+                Export-SqlBulkCsv -ServerName "$ServerName" -DatabaseName "$DatabaseName" -User "$User" -Password "$pass" -Query "SELECT * FROM [$SchemaName].[$TableViewName] WHERE [$DateColumnName] >= '$startDateStr' AND [$DateColumnName] < '$endDateStr'" -BatchSize $BatchSize -DatabaseCulture "$DatabaseCulture" -OutputFileFullPath "$($OutputFileFullPath.Replace('{}', $start.ToString($DateToken)))" -SeparatorChar "-"
+        
+                Write-Host $Command
+            } else {
+        
+                Export-SqlBulkCsv -ServerName "$ServerName" -DatabaseName "$DatabaseName" -Query "SELECT * FROM [$SchemaName].[$TableViewName] WHERE [$DateColumnName] >= '$startDateStr' AND [$DateColumnName] < '$endDateStr'" -BatchSize $BatchSize -DatabaseCulture "$DatabaseCulture" -OutputFileFullPath "$($OutputFileFullPath.Replace('{}', $start.ToString($DateToken)))" -SeparatorChar "-"
+        
+            }
 
             $start = $start.AddMonths(1)
 
@@ -535,7 +553,6 @@ function Export-MonthlySqlBulkCsv {
 
         Write-Host ""
         Write-Host ""
-
 
     }
     else
