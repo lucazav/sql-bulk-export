@@ -137,7 +137,7 @@ function Export-SqlBulkCsv {
 
         }
         
-        if ($ServerName -contains "database.windows.net") {
+        if ($ServerName.ToLower() -contains "database.windows.net") {
 
             $SqlConnectionString = 'Server=tcp:{0},{1};Initial Catalog={2};Persist Security Info=False;User ID={3};Password={4};Encrypt=True;Connection Timeout={5}' -f $ServerName, $Port, $DatabaseName, $User, $pass, $ConnectionTimeout;
 
@@ -149,7 +149,15 @@ function Export-SqlBulkCsv {
 
     } else {
 
-        $SqlConnectionString = 'Data Source={0},{1};Initial Catalog={2};Integrated Security=SSPI;Connection Timeout={3}' -f $ServerName, $Port, $DatabaseName, $ConnectionTimeout;
+        if ($ServerName.ToLower() -contains "database.windows.net") {
+
+            $SqlConnectionString = 'Server=tcp:{0},{1};Initial Catalog={2};Authentication=Active Directory Integrated;Encrypt=True;Connection Timeout={3}' -f $ServerName, $Port, $DatabaseName, $ConnectionTimeout;
+
+        } else {
+
+            $SqlConnectionString = 'Data Source={0},{1};Initial Catalog={2};Integrated Security=SSPI;Connection Timeout={3}' -f $ServerName, $Port, $DatabaseName, $ConnectionTimeout;
+
+        }
 
     }
 
