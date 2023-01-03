@@ -341,7 +341,6 @@ function Export-SqlBulkCsv {
     finally {
 
         Write-Host $separator
-        Write-Host ""
 
         $timer.Stop();
 
@@ -512,11 +511,15 @@ function Export-SqlBulkCsvByPeriod {
 
     if ($StartPeriodParsed -and $EndPeriodParsed -and ($StartPeriodParsed -le $EndPeriodParsed)) {
 
-        $titleStr = "  EXTRACTING $($PeriodDescr) DATA FROM [$($SchemaName)].[$($TableViewName)]"
-        $separator = GenerateSeparator -Title $titleStr
+        $timer = [Diagnostics.Stopwatch]::StartNew()
+
+        $titleStr1 = "  EXTRACTING $($PeriodDescr) DATA FROM [$($SchemaName)].[$($TableViewName)] "
+        $titleStr2 = "  FOR PERIODS FROM $($StartPeriod) TO $($EndPeriod)"
+        $separator = GenerateSeparator -Title $titleStr1
 
         Write-Host $separator
-        Write-Host $titleStr
+        Write-Host $titleStr1
+        Write-Host $titleStr2
         Write-Host $separator
         
         $start = $StartPeriodParsed
@@ -551,7 +554,12 @@ function Export-SqlBulkCsvByPeriod {
 
         }
 
+        $t = $timer.Elapsed
+
         Write-Host ""
+        Write-Host $separator
+        Write-Host "  ALL THE CSV FILES EXTRACTED IN $(GetTimespanString($t))"
+        Write-Host $separator
         Write-Host ""
 
     }
