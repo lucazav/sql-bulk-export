@@ -79,4 +79,4 @@ Note that the `Export-SqlBulkCsvByPeriod` function involves the use of the strin
 
 ## References
 
-For more details on the module, refer to the article posted on the Towards Data Science channel at this link.
+For more details on the module, refer to the article posted on the Towards Data Science channel at [this link](https://medium.com/towards-data-science/extracting-data-from-azure-sql-server-huge-tables-in-rfc-4180-compliant-csv-files-1cb09a7a0883).
